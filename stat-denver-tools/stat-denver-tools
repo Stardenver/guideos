@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Systeminformationen abrufen und temporäre Datei erstellen (mit automatischem Schließen des Fensters)
+yad --info --center --title="Systeminformationen sammeln" --text="Sammeln von Systeminformationen, bitte warten..." --timeout=5 --no-buttons
+systeminfo=$(inxi -Fz --color 0)
+temp_file=$(mktemp)
+printf "%s\n" "$systeminfo" > "$temp_file"
+
+# Fragen, ob die Informationen angezeigt werden sollen
+yad --question --center --title="Systeminformationen anzeigen" --text="Möchtest du dir die Systeminformationen vor dem Hochladen anzeigen lassen?"
+if [[ $? -eq 0 ]]; then
+    yad --text-info --center --title="Systeminformationen" --filename="$temp_file" --width=800 --height=600
+fi
+
+# Benutzer fragen, ob er mit dem Upload einverstanden ist
+yad --question --center --title="Upload bestätigen" --text="Möchtest du die Systeminformationen jetzt auf unseren Server hochladen?"
+if [[ $? -ne 0 ]]; then
+    yad --info --center --title="Abgebrochen" --text="Der Vorgang wurde abgebrochen."
+    rm "$temp_file"
+    exit 0
+fi
+
+# Systeminformationen hochladen (mit automatischem Schließen des Fensters nach einer bestimmten Zeit)
+yad --info --center --title="Hochladen" --text="Systeminformationen werden hochgeladen, bitte warten..." --timeout=5 --no-buttons
+response=$(curl -s -H "Content-Type: text/plain" -w "\n%{http_code}" -X POST --data-binary @"$temp_file" https://hastebin.sk347.net/documents)
+
+# Überprüfung auf Erfolg des curl-Aufrufs
+if [[ $? -ne 0 ]]; then
+    yad --error --center --title="Fehler" --text="Es gab ein Problem mit der Netzwerkverbindung oder dem Upload."
+    rm "$temp_file"
+    exit 1
+fi
+
+# HTTP-Code und JSON Antwort splitten
+http_code=$(echo "$response" | tail -n1)
+json_response=$(echo "$response" | head -n -1)
+
+# Temp löschen
+rm "$temp_file"
+
+# Check auf HTTP-Code 200
+if [[ "$http_code" -ne 200 ]]; then
+    case "$http_code" in
+        400) yad --error --center --title="Fehler" --text="Ungültige Anfrage (HTTP 400)." ;;
+        500) yad --error --center --title="Fehler" --text="Serverfehler (HTTP 500)." ;;
+        503) yad --error --center --title="Fehler" --text="Server nicht verfügbar (HTTP 503)." ;;
+        *) yad --error --center --title="Fehler" --text="Fehler beim Hochladen der Systeminformationen: Server antwortete mit HTTP-Code $http_code." ;;
+    esac
+    exit 1
+fi
+
+# URL extrahieren und Erfolgsmeldung anzeigen (als text-info, um Kopieren zu ermöglichen)
+key=$(echo "$json_response" | grep -oP '(?<="key":")[^"]*')
+
+if [ -n "$key" ]; then
+    url="https://hastebin.sk347.net/$key"
+    echo "$url" > "$temp_file"
+    yad --text-info --center --title="Bitte folgende Adresse kopieren" --filename="$temp_file" --width=500 --height=200 --button="OK:0"
+else
+    yad --error --center --title="Fehler" --text="Fehler beim Hochladen der Systeminformationen."
+    exit 1
+fi
+
+# Temp löschen
+rm "$temp_file"
