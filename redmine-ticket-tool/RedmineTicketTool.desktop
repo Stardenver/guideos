@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Redmine Ticket Tool
+Comment=Ein Tool zur Erstellung von Redmine-Tickets
+Exec=python3 /home/stardenver/woltlab2.py
+Icon=/home/stardenver/Downloads/icon.png
+Terminal=false
