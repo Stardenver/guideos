@@ -1,0 +1,42 @@
+#!/usr/bin/make -f
+
+PACKAGE := guideos-ticket-tool
+
+%:
+	dh $@
+
+override_dh_install:
+	# Erstellen der notwendigen Verzeichnisse
+	mkdir -p debian/$(PACKAGE)/usr/share/applications
+	mkdir -p debian/$(PACKAGE)/usr/share/icons/hicolor/256x256/apps
+	mkdir -p debian/$(PACKAGE)/usr/share/icons/hicolor/scalable/apps
+	mkdir -p debian/$(PACKAGE)/usr/share/metainfo
+	mkdir -p debian/$(PACKAGE)/usr/share/doc/$(PACKAGE)
+	mkdir -p debian/$(PACKAGE)/usr/share/applications/autostart
+	mkdir -p debian/$(PACKAGE)/opt/guideos-ticket-tool
+	mkdir -p debian/$(PACKAGE)/usr/bin
+
+	# Kopieren der Dateien
+	cp guideos-ticket-tool-logo.png debian/$(PACKAGE)/usr/share/icons/hicolor/256x256/apps/guideos-ticket-tool-logo.png
+	cp guideos-ticket-tool-logo.svg debian/$(PACKAGE)/usr/share/icons/hicolor/scalable/apps/guideos-ticket-tool-logo.svg
+	cp io.github.actionschnitzel.guideos-ticket-tool.appdata.xml debian/$(PACKAGE)/usr/share/metainfo/io.github.actionschnitzel.guideos-ticket-tool.appdata.xml
+	cp LICENSE debian/$(PACKAGE)/usr/share/doc/$(PACKAGE)/LICENSE
+
+	# Kopieren der notwendigen Dateien
+	rsync -av --exclude='start.sh' --exclude='.vscode' --exclude='src/__pycache__' --exclude='src/tabs/__pycache__' guideos-ticket-tool/* debian/$(PACKAGE)/opt/guideos-ticket-tool/
+
+	# Erstellen der .desktop-Datei
+	./create_desktop_files.sh
+
+	# Setzen der Berechtigungen
+	chmod +x debian/$(PACKAGE)/opt/guideos-ticket-tool/main.py
+
+	# Sicherstellen, dass alle Skripte ausführbar sind
+	#find debian/$(PACKAGE)/opt/guideos-ticket-tool/scripts/ -type f -iname "*.sh" -exec chmod +x {} \;
+
+	# Erstellen der /bin/guideos-ticket-tool Datei
+	echo "#!/bin/bash" > debian/$(PACKAGE)/usr/bin/guideos-ticket-tool
+	echo '/opt/guideos-ticket-tool/main.py "$@"' >> debian/$(PACKAGE)/usr/bin/guideos-ticket-tool
+	chmod +x debian/$(PACKAGE)/usr/bin/guideos-ticket-tool
+
+	dh_install
