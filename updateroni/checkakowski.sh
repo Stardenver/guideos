@@ -8,7 +8,7 @@ updates=$(apt list --upgradable 2>/dev/null | grep -v "Listing..." | wc -l)
 
 # Wenn es Updates gibt, sende eine Benachrichtigung
 if [ "$updates" -gt 0 ]; then
-  notify-send "Updates verf\u00fcgbar" "Es gibt $updates Updates f\u00fcr GuideOS. Bitte starte das Update-Tool."
+  notify-send "Updates verf\u00fcgbar" "Es gibt $updates Updates f\u00fcr GuideOS. Bitte führe in einem Terminal go -up aus."
 fi
 
 
