@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installationen der Distro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+        }
+        #counter {
+            font-size: 3em;
+            color: #007BFF;
+        }
+        p {
+            font-size: 1.2em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Installationen von GuideOS</h1>
+    <p>Bisher wurde die Distro <span id="counter">...</span> mal installiert!</p>
+
+    <script>
+        // API-Endpunkt
+        const apiUrl = 'https://counter.guideos.de/counter.php';
+
+        // Daten von der API abrufen
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                // Zählerstand anzeigen
+                document.getElementById('counter').textContent = data.count;
+            })
+            .catch(error => {
+                console.error('Fehler beim Laden des Zählers:', error);
+                document.getElementById('counter').textContent = 'Fehler';
+            });
+    </script>
+</body>
+</html>
