@@ -44,6 +44,8 @@ Dieses Python-Skript bietet eine grafische Benutzeroberfläche (GUI) zum Erstell
 Hier ist der vollständige Code für das Skript:
 
 ```python
+#!/usr/bin/python3
+
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
