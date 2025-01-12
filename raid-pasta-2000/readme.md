@@ -32,7 +32,7 @@ Dieses Python-Skript bietet eine grafische Benutzeroberfläche (GUI) zum Erstell
 1. Stelle sicher, dass du über die notwendigen Berechtigungen verfügst, um Änderungen an den Laufwerken vorzunehmen.
 2. Führe das Skript aus:
     ```sh
-    python3 raid_gui.py
+    python3 rp2k.py
     ```
 
 3. Die GUI wird gestartet und zeigt die verfügbaren Laufwerke an.
