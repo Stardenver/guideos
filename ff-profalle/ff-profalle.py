@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from tkinter import Tk, Label, Listbox, Entry, Button, StringVar, END, messagebox
+from tkinter import Tk, Label, Listbox, Entry, Button, StringVar, END, messagebox, filedialog
 from cryptography.fernet import Fernet
 
 def get_firefox_profiles():
@@ -29,6 +29,41 @@ def backup_and_encrypt_profile(profile, password):
     with open(os.path.expanduser(f"~/backup_{profile}_key.key"), 'wb') as key_file:
         key_file.write(key)
 
+def restore_profile(password):
+    backup_path = filedialog.askopenfilename(title="Select Backup File", filetypes=[("Zip files", "*.zip")])
+    if not backup_path:
+        return
+    
+    key_path = filedialog.askopenfilename(title="Select Key File", filetypes=[("Key files", "*.key")])
+    if not key_path:
+        return
+
+    with open(key_path, 'rb') as key_file:
+        key = key_file.read()
+    
+    cipher_suite = Fernet(key)
+    
+    with open(backup_path, 'rb') as file:
+        encrypted_data = file.read()
+    
+    try:
+        decrypted_data = cipher_suite.decrypt(encrypted_data)
+    except:
+        messagebox.showerror("Error", "Incorrect password or key.")
+        return
+    
+    restore_path = filedialog.askdirectory(title="Select Restore Directory")
+    if not restore_path:
+        return
+    
+    temp_backup_path = os.path.expanduser(f"~/temp_backup.zip")
+    with open(temp_backup_path, 'wb') as file:
+        file.write(decrypted_data)
+    
+    shutil.unpack_archive(temp_backup_path, restore_path)
+    os.remove(temp_backup_path)
+    messagebox.showinfo("Success", "Profile restored successfully.")
+
 def on_backup():
     selected_profile = profile_listbox.get(profile_listbox.curselection())
     password = password_var.get()
@@ -39,8 +74,15 @@ def on_backup():
     else:
         messagebox.showerror("Error", "Please select a profile and enter a password.")
 
+def on_restore():
+    password = password_var.get()
+    if password:
+        restore_profile(password)
+    else:
+        messagebox.showerror("Error", "Please enter a password.")
+
 app = Tk()
-app.title("Firefox Profile Backup")
+app.title("Firefox Profile Backup and Restore")
 
 Label(app, text="Select Firefox Profile:").pack()
 
@@ -56,5 +98,6 @@ password_var = StringVar()
 Entry(app, textvariable=password_var, show='*').pack()
 
 Button(app, text="Backup and Encrypt", command=on_backup).pack()
+Button(app, text="Restore", command=on_restore).pack()
 
 app.mainloop()
