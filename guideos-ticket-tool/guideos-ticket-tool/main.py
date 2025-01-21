@@ -169,7 +169,7 @@ def screenshot_waehlen():
 
 def open_bug_page():
     webbrowser.open(
-        "https://bugs.guideos.de/projects/guideos/issues?set_filter=1&tracker_id=1"
+        "https://bugs.guideos.net/projects/guideos/issues?set_filter=1&tracker_id=1"
     )
 
 
