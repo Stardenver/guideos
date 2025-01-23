@@ -1,26 +1,28 @@
 #!/usr/bin/python3
 
+
 import os
 import requests
-import subprocess
+import subprocess  # Dieses Modul importieren
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import webbrowser
 
+
 # API-Token aus der Umgebungsvariable laden
-api_token = os.getenv("MANTIS_API_TOKEN", "o-7QYYx6xmK9F_6YTyIwjnPryZawcey3")
+api_token = "8c0e2e3513312d0e83c7d152eeda149da4125773"
 
 if not api_token:
     raise ValueError(
-        "API-Token nicht gefunden. Bitte stelle sicher, dass die Umgebungsvariable MANTIS_API_TOKEN gesetzt ist."
+        "API-Token nicht gefunden. Bitte stelle sicher, dass die Umgebungsvariable REDMINE_API_TOKEN gesetzt ist."
     )
 
-# Mantis-URL und Projekt-Identifier
-mantis_url = "https://mantis.guideos.net"
-project_name = "guideos"  # Dein Projektname
-project_id = 1  # Deine Projekt-ID
+# Redmine-URL und Projekt-Identifier
+redmine_url = "https://bugs.guideos.net"
+project_identifier = "guideos-bugtracking"  # Dein Projekt-Identifier
 
-# Funktion zum Senden der Daten an Mantis
+
+# Funktion zum Senden der Daten an Redmine
 def ticket_erstellen():
     betreff = betreff_entry.get()
     beschreibung = beschreibung_text.get("1.0", tk.END)
@@ -37,39 +39,95 @@ def ticket_erstellen():
     full_description = f"{beschreibung}\n\nSysteminformationen:\n{system_info}"
 
     headers = {
-        "Authorization": f"Bearer {api_token}",
+        "X-Redmine-API-Key": api_token,
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
 
     # Ticket-Payload
     payload = {
-        "summary": betreff,
-        "description": full_description,
-        "project": {"id": project_id, "name": project_name},
+        "issue": {
+            "project_id": project_identifier,
+            "subject": betreff,
+            "description": full_description,
+        }
     }
 
-    response = requests.post(f"{mantis_url}/api/rest/issues/", json=payload, headers=headers)
-
-    if response.status_code == 201:
-        messagebox.showinfo("Erfolg", "Ticket wurde erfolgreich erstellt.")
-    else:
-        messagebox.showerror("Fehler", f"Fehler beim Erstellen des Tickets: {response.text}")
-
-# Anhang dem Ticket hinzufügen
-def anhang_hinzufuegen(ticket_id, file_path):
     try:
-        upload_url = f"{mantis_url}/api/rest/issues/{ticket_id}/files"
+        response = requests.post(
+            f"{redmine_url}/issues.json", json=payload, headers=headers
+        )
+        response.raise_for_status()
+
+        if response.status_code == 201:
+            ticket_id = response.json().get("issue", {}).get("id", "unbekannt")
+            success_message = f"Ticket erfolgreich erstellt. Ticket-ID: {ticket_id}"
+
+            # Wenn eine Datei als Anhang ausgewählt wurde, lade sie hoch
+            if screenshot_path:
+                upload_response = upload_attachment(ticket_id, screenshot_path)
+                if upload_response:
+                    success_message += (
+                        f"\nAnhang {screenshot_path} erfolgreich hinzugefügt."
+                    )
+
+            show_popup("Erfolg", success_message)
+            return True
+        else:
+            show_popup(
+                "Fehler",
+                f"Fehler beim Erstellen des Tickets. Statuscode: {response.status_code}",
+            )
+            return False
+
+    except requests.exceptions.RequestException as e:
+        show_popup("Anfragefehler", f"Fehler bei der API-Anfrage: {e}")
+        return False
+
+
+# Funktion zum Hochladen eines Anhangs
+def upload_attachment(ticket_id, file_path):
+    try:
         with open(file_path, "rb") as file:
-            files = {"file": (os.path.basename(file_path), file)}
-            headers = {
-                "Authorization": f"Bearer {api_token}",
-            }
-            response = requests.post(upload_url, files=files, headers=headers)
+            file_content = file.read()
+
+        url = f"{redmine_url}/uploads.json"
+        headers = {
+            "X-Redmine-API-Key": api_token,
+            "Content-Type": "application/octet-stream",
+            "Accept": "application/json",
+        }
+
+        response = requests.post(url, headers=headers, data=file_content)
 
         # Debugging-Ausgabe
-        print("Attachment Upload Status Code:", response.status_code)
-        print("Attachment Upload Response Text:", response.text)
+        print("Upload Status Code:", response.status_code)
+        print("Upload Response Text:", response.text)
+
+        response.raise_for_status()
+
+        # Den Token vom Upload abholen
+        upload_token = response.json().get("upload", {}).get("token")
+
+        # Anhang dem Ticket hinzufügen
+        issue_update_url = f"{redmine_url}/issues/{ticket_id}.json"
+        issue_data = {
+            "issue": {
+                "uploads": [
+                    {
+                        "token": upload_token,
+                        "filename": os.path.basename(file_path),
+                        "description": "Screenshot oder Anhang",
+                    }
+                ]
+            }
+        }
+        headers["Content-Type"] = "application/json"
+        response = requests.put(issue_update_url, json=issue_data, headers=headers)
+
+        # Debugging-Ausgabe
+        print("Attachment Update Status Code:", response.status_code)
+        print("Attachment Update Response Text:", response.text)
 
         response.raise_for_status()
         return True
@@ -78,13 +136,22 @@ def anhang_hinzufuegen(ticket_id, file_path):
         show_popup("Fehler", f"Fehler beim Hochladen des Anhangs: {e}")
         return False
 
+
 # Funktion zur Anzeige von Systeminformationen
 def get_inxi_info():
-    return "Dummy-Systeminformationen"
+    try:
+        result = subprocess.run(
+            ["inxi", "-F", "-c", "0"], capture_output=True, text=True, check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError:
+        return "Fehler: 'inxi' konnte nicht ausgeführt werden."
+
 
 # Popup-Anzeige
 def show_popup(title, message):
     messagebox.showinfo(title, message)
+
 
 # Funktion zur Auswahl einer Screenshot-Datei
 def screenshot_waehlen():
@@ -99,10 +166,12 @@ def screenshot_waehlen():
         screenshot_entry.delete(0, tk.END)
         screenshot_entry.insert(0, file_path)
 
+
 def open_bug_page():
     webbrowser.open(
         "https://bugs.guideos.net/projects/guideos/issues?set_filter=1&tracker_id=1"
     )
+
 
 # GUI erstellen
 root = tk.Tk()
@@ -122,6 +191,7 @@ root.tk.call(
 # or
 root.tk.call("set_theme", "light")
 
+
 titel_frame = ttk.LabelFrame(root, text="Betreff", padding=20)
 titel_frame.pack(fill="x", pady=5, padx=20)
 
@@ -132,12 +202,14 @@ betreff_entry.insert("end", "Gibt einen Titel ein:")
 issue_text_frame = ttk.LabelFrame(root, text="Fehlerbeschreibung", padding=20)
 issue_text_frame.pack(fill="x", pady=5, padx=20)
 
+
 beschreibung_text = tk.Text(
     issue_text_frame, borderwidth=0, highlightthickness=1, height=15
 )
 beschreibung_text.pack(pady=5, padx=5, fill="x", expand=True)
 
 beschreibung_text.insert("end", "Schreibe einen Text:")
+
 
 opt_frame = ttk.LabelFrame(root, text="Screenshot (optional)", padding=20)
 opt_frame.pack(fill="x", pady=5, padx=20)
