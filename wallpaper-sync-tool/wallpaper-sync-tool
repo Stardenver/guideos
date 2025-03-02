@@ -107,3 +107,4 @@ watch_wallpaper() {
 
 # Starte die Überwachung
 watch_wallpaper &
+
