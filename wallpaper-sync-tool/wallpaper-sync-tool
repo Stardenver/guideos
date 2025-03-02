@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# Konfigurationsdateien
+CONFIG_FILE="$HOME/.config/guideos-wallpaper-sync.conf"
+AUTOSTART_FILE="$HOME/.config/autostart/wallpaper-sync.desktop"
+LOCAL_BACKUP="$HOME/.wallpaper_backup"
+SCRIPT_PATH="$HOME/.local/bin/wallpaper-sync.sh"
+LAST_WALLPAPER_FILE="$HOME/.config/last_wallpaper.txt"
+
+# Funktion zur Abfrage der WebDAV-Zugangsdaten
+dialog_webdav_setup() {
+    WEBDAV_URL=$(zenity --entry --title="WebDAV Einrichtung" --text="Gib die WebDAV-Adresse ein (z. B. https://cloud.guideos.de/remote.php/dav/files/DEIN_NUTZERNAME/):")
+    WEBDAV_USER=$(zenity --entry --title="WebDAV Einrichtung" --text="Gib deinen WebDAV-Benutzernamen ein:")
+    WEBDAV_PASS=$(zenity --password --title="WebDAV Einrichtung" --text="Gib dein WebDAV-Passwort ein (App-Passwort empfohlen!):")
+    
+    # Prüfen, ob Zugangsdaten funktionieren und Ordnerstruktur abrufen
+    FOLDER_LIST=$(curl --basic -u "$WEBDAV_USER:$WEBDAV_PASS" -X PROPFIND --data '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:allprop/></d:propfind>' -H "Depth: 1" -H "Content-Type: text/xml" -s "$WEBDAV_URL" | grep -Eo '<d:href>[^<]+</d:href>' | sed -E 's|<d:href>(.+)/</d:href>|\1|' | awk -F '/' '{print $NF}')
+    
+    if [ -z "$FOLDER_LIST" ]; then
+        zenity --error --text="Fehler beim Zugriff auf WebDAV. 
+- Überprüfe die Zugangsdaten 
+- Falls du 2FA nutzt, verwende ein App-Passwort. 
+- Stelle sicher, dass die WebDAV-URL korrekt ist."
+        exit 1
+    fi
+    
+    # Ordnerauswahl anzeigen
+    SELECTED_FOLDER=$(zenity --list --title="WebDAV Ordnerwahl" --text="Wähle den Speicherort für Wallpaper:" --column="Ordner" $FOLDER_LIST)
+    
+    if [ -z "$SELECTED_FOLDER" ]; then
+        zenity --error --text="Kein Ordner ausgewählt. Vorgang abgebrochen."
+        exit 1
+    fi
+    
+    # Endgültigen Speicherort setzen
+    WEBDAV_FOLDER="$WEBDAV_URL/$SELECTED_FOLDER/wallpaper-sync-tool"
+    
+    # Konfiguration speichern
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+    echo "WEBDAV_URL=$WEBDAV_URL" > "$CONFIG_FILE"
+    echo "WEBDAV_USER=$WEBDAV_USER" >> "$CONFIG_FILE"
+    echo "WEBDAV_PASS=$WEBDAV_PASS" >> "$CONFIG_FILE"
+    echo "WEBDAV_FOLDER=$WEBDAV_FOLDER" >> "$CONFIG_FILE"
+    
+    zenity --info --text="WebDAV-Einrichtung abgeschlossen. Wallpaper werden unter $WEBDAV_FOLDER gespeichert."
+}
+
+# Falls keine Konfigurationsdatei existiert, WebDAV-Setup starten
+if [ ! -f "$CONFIG_FILE" ]; then
+    dialog_webdav_setup
+else
+    source "$CONFIG_FILE"
+fi
+
+# Sicherstellen, dass das Skript in den Cinnamon-Autostart aufgenommen wird
+mkdir -p "$HOME/.config/autostart"
+mkdir -p "$HOME/.local/bin"
+mkdir -p "$LOCAL_BACKUP"
+
+# Skript an eine feste Position kopieren
+cp "$0" "$SCRIPT_PATH"
+chmod +x "$SCRIPT_PATH"
+
+if [ ! -f "$AUTOSTART_FILE" ]; then
+    cat <<EOF > "$AUTOSTART_FILE"
+[Desktop Entry]
+Type=Application
+Exec=/bin/bash "$SCRIPT_PATH"
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Wallpaper Sync
+Comment=Startet das Wallpaper Sync Tool beim Login
+EOF
+fi
+
+# Funktion zur Überwachung des aktuellen Hintergrundbilds
+watch_wallpaper() {
+    local last_wallpaper=""
+    if [ -f "$LAST_WALLPAPER_FILE" ]; then
+        last_wallpaper=$(cat "$LAST_WALLPAPER_FILE")
+    fi
+
+    while true; do
+        CURRENT_WALLPAPER=$(gsettings get org.cinnamon.desktop.background picture-uri | sed -e "s/'file:\/\///" -e "s/'//")
+        if [[ "$CURRENT_WALLPAPER" != "$last_wallpaper" && -f "$CURRENT_WALLPAPER" ]]; then
+            last_wallpaper="$CURRENT_WALLPAPER"
+            echo "$CURRENT_WALLPAPER" > "$LAST_WALLPAPER_FILE"
+            
+            # Bestätigungsdialog anzeigen
+            if zenity --question --text="Neues Hintergrundbild erkannt. Soll es gesichert werden?"; then
+                # Lokale Kopie speichern
+                cp "$CURRENT_WALLPAPER" "$LOCAL_BACKUP/$(basename "$CURRENT_WALLPAPER")"
+                
+                # WebDAV-Ordner erstellen, falls er nicht existiert
+                curl --basic -u "$WEBDAV_USER:$WEBDAV_PASS" -X MKCOL "$WEBDAV_FOLDER" >/dev/null 2>&1
+                
+                # Datei zu WebDAV hochladen
+                curl --basic -T "$CURRENT_WALLPAPER" --user "$WEBDAV_USER:$WEBDAV_PASS" "$WEBDAV_FOLDER/$(basename "$CURRENT_WALLPAPER")"
+                
+                zenity --info --text="Hintergrundbild wurde erfolgreich gesichert."
+            fi
+        fi
+        sleep 5  # Alle 5 Sekunden prüfen
+    done
+}
+
+# Starte die Überwachung
+watch_wallpaper &
