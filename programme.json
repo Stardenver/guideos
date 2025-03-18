@@ -1,0 +1,164 @@
+{
+  "programme": [
+    {
+      "name": "Brave",
+      "beschreibung": "Webbrowser mit Fokus auf Datenschutz",
+      "install_befehl": "apt install -y brave-browser"
+    },
+    {
+      "name": "Vivaldi",
+      "beschreibung": "Funktionsreicher Webbrowser",
+      "install_befehl": "apt install -y vivaldi-stable"
+    },
+    {
+      "name": "LibreWolf",
+      "beschreibung": "Datenschutzfreundlicher Fork von Firefox",
+      "install_befehl": "flatpak install -y io.gitlab.librewolf-community"
+    },
+    {
+      "name": "Chromium",
+      "beschreibung": "Open-Source-Browser, Basis für Google Chrome",
+      "install_befehl": "apt install -y chromium-browser"
+    },
+    {
+      "name": "Google Chrome",
+      "beschreibung": "Proprietärer Webbrowser von Google",
+      "install_befehl": "apt install -y google-chrome-stable"
+    },
+    {
+      "name": "Geary",
+      "beschreibung": "Schlanker E-Mail-Client",
+      "install_befehl": "apt install -y geary"
+    },
+    {
+      "name": "ZapZap",
+      "beschreibung": "Linux-Client für WhatsApp Web",
+      "install_befehl": "flatpak install -y com.rtosta.zapzap"
+    },
+    {
+      "name": "Telegram",
+      "beschreibung": "Messenger für schnelle Kommunikation",
+      "install_befehl": "apt install -y telegram-desktop"
+    },
+    {
+      "name": "Signal",
+      "beschreibung": "Messenger mit Ende-zu-Ende-Verschlüsselung",
+      "install_befehl": "flatpak install -y org.signal.Signal"
+    },
+    {
+      "name": "Element",
+      "beschreibung": "Matrix-Client für dezentrale Kommunikation",
+      "install_befehl": "flatpak install -y im.riot.Riot"
+    },
+    {
+      "name": "Ferdium",
+      "beschreibung": "All-in-one Messenger",
+      "install_befehl": "flatpak install -y org.ferdium.Ferdium"
+    },
+    {
+      "name": "FreeOffice",
+      "beschreibung": "Kostenlose Bürosoftware von SoftMaker",
+      "install_befehl": "flatpak install -y com.softmaker.FreeOffice"
+    },
+    {
+      "name": "OnlyOffice",
+      "beschreibung": "Office-Suite mit MS-Office-Kompatibilität",
+      "install_befehl": "flatpak install -y org.onlyoffice.desktopeditors"
+    },
+    {
+      "name": "AbiWord",
+      "beschreibung": "Minimalistische Textverarbeitung",
+      "install_befehl": "apt install -y abiword"
+    },
+    {
+      "name": "Audacity",
+      "beschreibung": "Audioeditor für Aufnahme und Bearbeitung",
+      "install_befehl": "apt install -y audacity"
+    },
+    {
+      "name": "OBS",
+      "beschreibung": "Open Broadcaster Software für Streaming und Aufnahme",
+      "install_befehl": "apt install -y obs-studio"
+    },
+    {
+      "name": "kdenlive",
+      "beschreibung": "Videoschnittprogramm mit umfangreichen Funktionen",
+      "install_befehl": "apt install -y kdenlive"
+    },
+    {
+      "name": "Rhythmbox",
+      "beschreibung": "Standard-Musikplayer von GNOME",
+      "install_befehl": "apt install -y rhythmbox"
+    },
+    {
+      "name": "Strawberry",
+      "beschreibung": "Audio-Player basierend auf Clementine",
+      "install_befehl": "flatpak install -y org.strawberrymusicplayer.strawberry"
+    },
+    {
+      "name": "Clementine",
+      "beschreibung": "Beliebter Audio-Player und Musik-Manager",
+      "install_befehl": "apt install -y clementine"
+    },
+    {
+      "name": "Amarok",
+      "beschreibung": "Multifunktionaler Musik-Player für KDE",
+      "install_befehl": "apt install -y amarok"
+    },
+    {
+      "name": "FreeTube",
+      "beschreibung": "Privatsphärenfreundlicher YouTube-Client",
+      "install_befehl": "flatpak install -y io.freetubeapp.FreeTube"
+    },
+    {
+      "name": "Gimp",
+      "beschreibung": "Leistungsfähiges Bildbearbeitungsprogramm",
+      "install_befehl": "apt install -y gimp"
+    },
+    {
+      "name": "Krita",
+      "beschreibung": "Digitales Malprogramm mit Zeichenfunktionen",
+      "install_befehl": "apt install -y krita"
+    },
+    {
+      "name": "Inkscape",
+      "beschreibung": "Vektorgrafik-Editor",
+      "install_befehl": "apt install -y inkscape"
+    },
+    {
+      "name": "Darktable",
+      "beschreibung": "Fotobearbeitung und RAW-Entwicklung",
+      "install_befehl": "apt install -y darktable"
+    },
+    {
+      "name": "Pinta",
+      "beschreibung": "Einfache Bildbearbeitung ähnlich Paint.NET",
+      "install_befehl": "apt install -y pinta"
+    },
+    {
+      "name": "Steam",
+      "beschreibung": "Spieleplattform von Valve",
+      "install_befehl": "apt install -y steam"
+    },
+    {
+      "name": "Lutris",
+      "beschreibung": "Spieleverwaltung für Linux",
+      "install_befehl": "apt install -y lutris"
+    },
+    {
+      "name": "Heroic",
+      "beschreibung": "Open-Source-Launcher für Epic Games und GOG",
+      "install_befehl": "flatpak install -y com.heroicgameslauncher.hgl"
+    },
+    {
+      "name": "ProtonUp-Qt",
+      "beschreibung": "Tool zum einfachen Aktualisieren von Proton",
+      "install_befehl": "flatpak install -y net.davidotek.pupgui2"
+    },
+    {
+      "name": "Bitwarden",
+      "beschreibung": "Passwort-Manager mit Cloud-Synchronisation",
+      "install_befehl": "flatpak install -y com.bitwarden.desktop"
+    }
+  ]
+}
