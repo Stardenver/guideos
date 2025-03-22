@@ -10,7 +10,7 @@ import webbrowser
 
 
 # API-Token aus der Umgebungsvariable laden
-api_token = "8c0e2e3513312d0e83c7d152eeda149da4125773"
+api_token = "17d83a8b8e64ab63843068e7609b9a55755035d7"
 
 if not api_token:
     raise ValueError(
@@ -19,7 +19,7 @@ if not api_token:
 
 # Redmine-URL und Projekt-Identifier
 redmine_url = "https://bugs.guideos.net"
-project_identifier = "guideos-bugtracking"  # Dein Projekt-Identifier
+project_identifier = "guideos"  # Dein Projekt-Identifier
 
 
 # Funktion zum Senden der Daten an Redmine
